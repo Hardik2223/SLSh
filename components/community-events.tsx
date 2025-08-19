@@ -1,25 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Users, Clock, CheckCircle } from "lucide-react"
 import { mockCommunityEvents } from "@/data/mock-data"
+import { fetchCommunityEvents, rsvpEvent } from "@/lib/api"
+import { useAuth } from "@/contexts/auth-context"
 
 export function CommunityEvents() {
+  const { user } = useAuth()
   const [rsvpedEvents, setRsvpedEvents] = useState<Set<string>>(new Set())
+  const [events, setEvents] = useState(mockCommunityEvents)
+  const [loading, setLoading] = useState(false)
 
-  const handleRSVP = (eventId: string) => {
-    setRsvpedEvents((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(eventId)) {
-        newSet.delete(eventId)
-      } else {
-        newSet.add(eventId)
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const res = await fetchCommunityEvents()
+        if (res.success && Array.isArray(res.data)) {
+          // Convert any date strings back to Date objects if needed
+          const normalized = res.data.map((e: any) => ({
+            ...e,
+            date: new Date(e.date),
+          }))
+          setEvents(normalized)
+        }
+      } finally {
+        setLoading(false)
       }
-      return newSet
+    }
+    load()
+  }, [])
+
+  const handleRSVP = async (eventId: string) => {
+    setRsvpedEvents((prev) => {
+      const next = new Set(prev)
+      if (next.has(eventId)) next.delete(eventId)
+      else next.add(eventId)
+      return next
     })
+
+    if (!user) return
+    try {
+      const isNowRsvped = !rsvpedEvents.has(eventId)
+      const res = await rsvpEvent(eventId, user.id, isNowRsvped)
+      if (res.success && res.data) {
+        setEvents((prev) => prev.map((e) => (e.id === eventId ? { ...e, attendees: res.data.attendees } : e)))
+      }
+    } catch {}
   }
 
   const formatDate = (date: Date) => {
@@ -81,7 +112,7 @@ export function CommunityEvents() {
 
         {/* Events List */}
         <div className="space-y-4">
-          {mockCommunityEvents.map((event) => (
+          {(loading ? events : events).map((event) => (
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
