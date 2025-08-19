@@ -58,3 +58,45 @@ export async function fetchUserLocations(userId: string): Promise<ApiResponse<an
   const response = await fetch(`${API_BASE_URL}/user/${userId}/locations`)
   return response.json()
 }
+
+// Community events
+export async function fetchCommunityEvents(): Promise<ApiResponse<any[]>> {
+  const response = await fetch(`${API_BASE_URL}/events`)
+  return response.json()
+}
+
+export async function rsvpEvent(eventId: string, userId: string, rsvp: boolean): Promise<ApiResponse<any>> {
+  const response = await fetch(`${API_BASE_URL}/events/${eventId}/rsvp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, rsvp }),
+  })
+  return response.json()
+}
+
+// Badges
+export async function fetchBadges(): Promise<ApiResponse<any[]>> {
+  const response = await fetch(`${API_BASE_URL}/badges`)
+  return response.json()
+}
+
+// Leaderboard
+export async function fetchLeaderboard(): Promise<ApiResponse<any[]>> {
+  const response = await fetch(`${API_BASE_URL}/leaderboard`)
+  return response.json()
+}
+
+// Reviews
+export async function fetchLocationReviews(locationId: string): Promise<ApiResponse<any[]>> {
+  const response = await fetch(`${API_BASE_URL}/locations/${locationId}/reviews`)
+  return response.json()
+}
+
+export async function submitReview(locationId: string, review: any): Promise<ApiResponse<any>> {
+  const response = await fetch(`${API_BASE_URL}/locations/${locationId}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(review),
+  })
+  return response.json()
+}
