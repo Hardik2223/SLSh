@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://slsh-production.up.railway.app/api""
+const API_BASE_URL = "https://slsh-production.up.railway.app/api"
 
 export interface ApiResponse<T> {
   success: boolean
